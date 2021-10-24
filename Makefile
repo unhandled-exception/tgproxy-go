@@ -8,6 +8,9 @@ test:
 	@golangci-lint run
 	@go test -v ./... -cover -race
 
+lint:
+	@golangci-lint run
+
 act:
 	@act -l --container-architecture linux/amd64
 	@act --container-architecture linux/amd64
