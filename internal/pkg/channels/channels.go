@@ -13,32 +13,32 @@ var (
 	CreateChannelErorr = eris.New("Error on create channel")
 )
 
-type Channel interface {
+type MessageChannelInterface interface {
 	fmt.Stringer
+	Name() string
+	MessageContainer() interface{}
+	Enqueue(interface{}) error
 }
 
-type telegramChannel struct {
-	chanURL *url.URL
-	logger  *zerolog.Logger
-}
+var channelsTypes = map[string]func(chanURL *url.URL, logger *zerolog.Logger) (MessageChannelInterface, error){}
 
-func NewTelegramChannel(chanURL *url.URL, logger *zerolog.Logger) (Channel, error) {
-	channel := &telegramChannel{
-		chanURL: chanURL,
+func BuildChannelsFromURLS(urls []string, logger *zerolog.Logger) ([]MessageChannelInterface, error) {
+	result := []MessageChannelInterface{}
+	for _, chanURL := range urls {
+		u, err := url.Parse(chanURL)
+		if err != nil {
+			return nil, err
+		}
+		ch, err := BuildChannel(u, logger)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, ch)
 	}
-	return channel, nil
+	return result, nil
 }
 
-func (ch *telegramChannel) String() string {
-	return fmt.Sprintf(
-		"%s://%s:***@%s/%s?%s",
-		ch.chanURL.Scheme, ch.chanURL.User.Username(), ch.chanURL.Hostname(), ch.chanURL.Path, ch.chanURL.RawQuery,
-	)
-}
-
-var channelsTypes = map[string]func(chanURL *url.URL, logger *zerolog.Logger) (Channel, error){}
-
-func BuildChannel(chanURL *url.URL, logger *zerolog.Logger) (Channel, error) {
+func BuildChannel(chanURL *url.URL, logger *zerolog.Logger) (MessageChannelInterface, error) {
 	channelConstructor, ok := channelsTypes[chanURL.Scheme]
 	if !ok {
 		return nil, eris.Wrapf(UnknownChannelType, "scheme: %s", chanURL.Scheme)
