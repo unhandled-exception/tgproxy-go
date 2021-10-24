@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
 
@@ -12,7 +11,6 @@ import (
 	"internal/pkg/httpapi"
 
 	"github.com/go-chi/httplog"
-	"github.com/rs/zerolog"
 )
 
 const programHelp = `
@@ -59,17 +57,17 @@ func main() {
 
 	logger := httplog.NewLogger("tgp-api")
 
-	channels, err := buildChannelsFromURLS(channelsURLS, &logger)
+	messageChannels, err := channels.BuildChannelsFromURLS(channelsURLS, &logger)
 	if err != nil {
 		printCommandLineErrorAndExit(err.Error(), InvalidArgumentExitCode)
 	}
 
-	logger.Info().Msg(fmt.Sprint(channels))
+	logger.Info().Msg(fmt.Sprint(messageChannels))
 
 	logger.Info().Msg("Start http server")
 	err = http.ListenAndServe(
 		fmt.Sprintf("%s:%s", host, port),
-		httpapi.NewHTTPAPI(channels, logger),
+		httpapi.NewHTTPAPI(messageChannels, logger),
 	)
 	if err != nil {
 		logger.Panic().Err(err)
@@ -81,20 +79,4 @@ func printCommandLineErrorAndExit(msg string, exitCode int) {
 	fmt.Fprintf(os.Stderr, "---------------------\n\n")
 	flag.Usage()
 	os.Exit(exitCode)
-}
-
-func buildChannelsFromURLS(urls []string, logger *zerolog.Logger) ([]channels.Channel, error) {
-	result := []channels.Channel{}
-	for _, chanURL := range urls {
-		u, err := url.Parse(chanURL)
-		if err != nil {
-			return nil, err
-		}
-		ch, err := channels.BuildChannel(u, logger)
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, ch)
-	}
-	return result, nil
 }
