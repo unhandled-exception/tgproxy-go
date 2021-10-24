@@ -1,2 +1,3 @@
 # tgproxy-go
-Форк tgproxy на Го
+
+Форк [tgproxy](https://github.com/unhandled-exception/tgproxy) на Го.
