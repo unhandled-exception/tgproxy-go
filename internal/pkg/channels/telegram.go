@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -13,19 +14,26 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const (
-	defaultTelegramMessageQueueSize = 10000
-	telegramBotAPIURL               = "https://api.telegram.org"
+var (
+	ErrChannelIsFull      = eris.New("The channel is full")
+	ErrInvalidMessageType = eris.New("Invalid message type")
 )
 
-var ChannelIsFull = eris.New("The channel is full")
+var (
+	_telegramMessageQueueSize = 10000
+	_telegramBotAPIURL        = "https://api.telegram.org"
+)
+
+var _telegramProviderOptions = []string{
+	"timeout",
+}
 
 type telegramMessage struct {
 	Text                  string  `json:"text" mapstructure:"text"`
 	ParseMode             *string `json:"parse_mode,omitempty" mapstructure:"parse_mode,omitempty"`
 	DisableWebPagePreview int     `json:"disable_web_page_preview" mapstructure:"disable_web_page_preview"`
 	DisableNotifications  int     `json:"disable_notifications" mapstructure:"disable_notifications"`
-	ReplyToMessage_id     *int    `json:"reply_to_message_id,omitempty" mapstructure:"reply_to_message_id,omitempty"`
+	ReplyToMessageID      *int    `json:"reply_to_message_id,omitempty" mapstructure:"reply_to_message_id,omitempty"`
 }
 
 func (m *telegramMessage) String() string {
@@ -38,8 +46,7 @@ func (m *telegramMessage) String() string {
 
 func (m *telegramMessage) Map() (map[string]interface{}, error) {
 	res := map[string]interface{}{}
-	err := mapstructure.Decode(m, &res)
-	if err != nil {
+	if err := mapstructure.Decode(m, &res); err != nil {
 		return nil, err
 	}
 	return res, nil
@@ -48,32 +55,55 @@ func (m *telegramMessage) Map() (map[string]interface{}, error) {
 type telegramChannel struct {
 	chanURL *url.URL
 
-	logger *zerolog.Logger
-	name   string
-
+	logger   *zerolog.Logger
+	name     string
 	queue    chan *telegramMessage
 	provider interface {
 		SendMessage(*telegramMessage) error
 	}
+	providerOpts map[string]string
 }
 
 func NewTelegramChannel(chanURL *url.URL, logger *zerolog.Logger) (MessageChannelInterface, error) {
-	channel := &telegramChannel{
-		chanURL: chanURL,
-		logger:  logger,
-		name:    strings.TrimLeft(chanURL.Path, "/"),
+	providerOpts := map[string]string{}
+	for _, opt := range _telegramProviderOptions {
+		if val := chanURL.Query().Get(opt); val != "" {
+			providerOpts[opt] = val
+		}
+	}
+	provider, err := NewTelegramChat(_telegramBotAPIURL, chanURL.User.String(), chanURL.Host, providerOpts, logger)
+	if err != nil {
+		return nil, err
+	}
 
-		queue:    make(chan *telegramMessage, defaultTelegramMessageQueueSize),
-		provider: NewTelegramChat(telegramBotAPIURL, chanURL.User.String(), chanURL.Host, logger),
+	channel := &telegramChannel{
+		chanURL:      chanURL,
+		logger:       logger,
+		name:         strings.Trim(chanURL.Path, "/"),
+		queue:        make(chan *telegramMessage, _telegramMessageQueueSize),
+		provider:     provider,
+		providerOpts: providerOpts,
 	}
 	go channel.processQueue()
+
 	return channel, nil
 }
 
 func (ch *telegramChannel) String() string {
+	opts := []string{}
+	for k, v := range ch.providerOpts {
+		opts = append(opts, k+"="+v)
+	}
+	fmt.Print(opts)
+
+	var sOpts string
+	if len(opts) > 0 {
+		sOpts = "?" + strings.Join(opts, "&")
+	}
+
 	return fmt.Sprintf(
-		"%s://%s:***@%s/%s?%s",
-		ch.chanURL.Scheme, ch.chanURL.User.Username(), ch.chanURL.Hostname(), ch.chanURL.Path, ch.chanURL.RawQuery,
+		"%s://%s:***@%s%s%s",
+		ch.chanURL.Scheme, ch.chanURL.User.Username(), ch.chanURL.Hostname(), ch.chanURL.Path, sOpts,
 	)
 }
 
@@ -86,11 +116,14 @@ func (ch *telegramChannel) MessageContainer() interface{} {
 }
 
 func (ch *telegramChannel) Enqueue(newMessage interface{}) error {
-	message := newMessage.(*telegramMessage)
+	message, ok := newMessage.(*telegramMessage)
+	if !ok {
+		return ErrInvalidMessageType
+	}
 	select {
 	case ch.queue <- message:
 	default:
-		return ChannelIsFull
+		return ErrChannelIsFull
 	}
 
 	ch.logger.Info().Msgf("Enqueue message: %s", message)
@@ -99,8 +132,7 @@ func (ch *telegramChannel) Enqueue(newMessage interface{}) error {
 
 func (ch *telegramChannel) processQueue() {
 	for m := range ch.queue {
-		err := ch.provider.SendMessage(m)
-		if err != nil {
+		if err := ch.provider.SendMessage(m); err != nil {
 			ch.logger.Error().Msgf("Failed to send message: %s", err)
 			continue
 		}
@@ -119,16 +151,32 @@ var telegramFatalHTTPStatusCodes = map[int]bool{
 	400: true,
 }
 
-func NewTelegramChat(apiURL string, botToken string, chatID string, logger *zerolog.Logger) *telegramChat {
-	client := resty.New()
-	client.
+const (
+	httpTimeout     = 5 * time.Second
+	httpRetries     = 4
+	httpMaxWaitTime = 32 * time.Second
+)
+
+var ErrTelegramInvalidTimeout = eris.New("Invalid telegram timeout")
+
+func NewTelegramChat(apiURL string, botToken string, chatID string, opts map[string]string, logger *zerolog.Logger) (*telegramChat, error) {
+	timeout := httpTimeout
+	if val, ok := opts["timeout"]; ok {
+		timeoutOpt, err := strconv.ParseInt(val, 10, 32)
+		if err != nil {
+			return nil, err
+		}
+		timeout = time.Duration(timeoutOpt) * time.Second
+	}
+
+	client := resty.New().
 		SetHostURL(
 			fmt.Sprintf("%s/bot%s", apiURL, botToken),
 		).
-		SetTimeout(5 * time.Second).
+		SetTimeout(timeout).
 		SetRedirectPolicy(resty.NoRedirectPolicy()).
-		SetRetryCount(4).
-		SetRetryMaxWaitTime(32 * time.Second).
+		SetRetryCount(httpRetries).
+		SetRetryMaxWaitTime(httpMaxWaitTime).
 		AddRetryCondition(
 			func(r *resty.Response, err error) bool {
 				return telegramFatalHTTPStatusCodes[r.StatusCode()]
@@ -140,7 +188,7 @@ func NewTelegramChat(apiURL string, botToken string, chatID string, logger *zero
 		chatID: chatID,
 		logger: logger,
 	}
-	return provider
+	return provider, nil
 }
 
 func (tc *telegramChat) SendMessage(message *telegramMessage) error {
@@ -154,7 +202,6 @@ func (tc *telegramChat) SendMessage(message *telegramMessage) error {
 	if err != nil {
 		return eris.Wrap(err, "Error on send message")
 	}
-	tc.logger.Info().Msg(string(body))
 
 	res, err := tc.client.R().
 		SetHeader("Content-Type", "application/json").

@@ -10,7 +10,7 @@ on:
 name: tests
 jobs:
   # Образец взял из https://github.com/mvdan/github-actions-golang
-  test:
+  tests:
     strategy:
       matrix:
         go-version:
@@ -38,7 +38,7 @@ jobs:
       - name: Build tgp
         run: go build -v ./cmd/tgp
       - name: Run tests
-        run: go test ./... -v -cover -race
+        run: go test ./... -v -cover -race -coverpkg=./...
 
   # https://github.com/golangci/golangci-lint-action
   golangci:

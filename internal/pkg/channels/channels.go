@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	UnknownChannelType = eris.New("Unknown channel type")
-	CreateChannelErorr = eris.New("Error on create channel")
+	ErrUnknownChannelType = eris.New("Unknown channel type")
+	ErrCreateChannelErorr = eris.New("Error on create channel")
 )
 
 type MessageChannelInterface interface {
@@ -20,7 +20,7 @@ type MessageChannelInterface interface {
 	Enqueue(interface{}) error
 }
 
-var channelsTypes = map[string]func(chanURL *url.URL, logger *zerolog.Logger) (MessageChannelInterface, error){}
+var _channelsTypes = map[string]func(chanURL *url.URL, logger *zerolog.Logger) (MessageChannelInterface, error){}
 
 func BuildChannelsFromURLS(urls []string, logger *zerolog.Logger) ([]MessageChannelInterface, error) {
 	result := []MessageChannelInterface{}
@@ -39,9 +39,9 @@ func BuildChannelsFromURLS(urls []string, logger *zerolog.Logger) ([]MessageChan
 }
 
 func BuildChannel(chanURL *url.URL, logger *zerolog.Logger) (MessageChannelInterface, error) {
-	channelConstructor, ok := channelsTypes[chanURL.Scheme]
+	channelConstructor, ok := _channelsTypes[chanURL.Scheme]
 	if !ok {
-		return nil, eris.Wrapf(UnknownChannelType, "scheme: %s", chanURL.Scheme)
+		return nil, eris.Wrapf(ErrUnknownChannelType, "scheme: %s", chanURL.Scheme)
 	}
 	channel, err := channelConstructor(chanURL, logger)
 	if err != nil {
@@ -51,5 +51,5 @@ func BuildChannel(chanURL *url.URL, logger *zerolog.Logger) (MessageChannelInter
 }
 
 func init() {
-	channelsTypes["telegram"] = NewTelegramChannel
+	_channelsTypes["telegram"] = NewTelegramChannel
 }

@@ -10,13 +10,13 @@ linters:
     - dupl
     - errcheck
     - exhaustive
-    - gochecknoinits
+    # - gochecknoinits
     - goconst
     - gocritic
     - gocyclo
     - gofmt
     - goimports
-    - gomnd
+    # - gomnd
     - goprintffuncname
     - gosec
     - gosimple
