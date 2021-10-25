@@ -7,8 +7,8 @@ import (
 	"os"
 	"strings"
 
-	"internal/pkg/channels"
-	"internal/pkg/httpapi"
+	"github.com/unhandled-exception/tgproxy-go/internal/pkg/channels"
+	"github.com/unhandled-exception/tgproxy-go/internal/pkg/httpapi"
 
 	"github.com/go-chi/httplog"
 )
@@ -20,7 +20,7 @@ Start server:
 tgp telegram://bot:tok1@123/chat_1 telegram://bot:tok1@123/chat_2?timeout=3
 
 API:
-Get ping-status — GET http://localhost:5000/ping.html
+Get ping-status — GET http://localhost:5000/ping
 Get channels list — GET http://localhost:5000/
 Send messge POST http://localhost:5000/chat_1 (text="Message", parse_mode ...)
 Get channel statistics GET http://localhost:5000/chat_1
@@ -67,7 +67,7 @@ func main() {
 	logger.Info().Msg("Start http server")
 	err = http.ListenAndServe(
 		fmt.Sprintf("%s:%s", host, port),
-		httpapi.NewHTTPAPI(messageChannels, logger),
+		httpapi.NewHTTPAPI(messageChannels, &logger),
 	)
 	if err != nil {
 		logger.Panic().Err(err)
