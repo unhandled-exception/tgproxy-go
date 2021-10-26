@@ -24,3 +24,7 @@ lint:
 act:
 	@act -l --container-architecture linux/amd64
 	@act -j tests --container-architecture linux/amd64
+
+.PHONY: docker
+docker:
+	@docker build . -t tgproxy-go:latest
