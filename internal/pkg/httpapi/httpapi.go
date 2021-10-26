@@ -53,6 +53,35 @@ func (api *HTTPAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	api.router.ServeHTTP(w, r)
 }
 
+func (api *HTTPAPI) GetChannel(name string) (channels.MessageChannelInterface, error) {
+	ch, ok := api.channelsMap[name]
+	if !ok {
+		return nil, eris.Wrap(ErrChannelNotFound, name)
+	}
+	return ch, nil
+}
+
+func (api *HTTPAPI) StartAllChannels() error {
+	for _, v := range api.channelsMap {
+		if err := v.Start(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (api *HTTPAPI) StopChannel(name string) error {
+	ch, err := api.GetChannel(name)
+	if err != nil {
+		return err
+	}
+
+	if err := ch.Stop(); err != nil {
+		return nil
+	}
+	return nil
+}
+
 func (api *HTTPAPI) onPing(w http.ResponseWriter, r *http.Request) {
 	api.renderSuccess(w, r, nil, http.StatusOK)
 }
@@ -69,7 +98,7 @@ func (api *HTTPAPI) onIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *HTTPAPI) onSend(w http.ResponseWriter, r *http.Request) {
-	ch, err := api.getChannel(chi.URLParam(r, "channelName"))
+	ch, err := api.GetChannel(chi.URLParam(r, "channelName"))
 	if err != nil {
 		api.renderError(w, r, err, http.StatusNotFound)
 		return
@@ -87,14 +116,6 @@ func (api *HTTPAPI) onSend(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.renderSuccess(w, r, nil, http.StatusCreated)
-}
-
-func (api *HTTPAPI) getChannel(channelName string) (channels.MessageChannelInterface, error) {
-	ch, ok := api.channelsMap[channelName]
-	if !ok {
-		return nil, eris.Wrap(ErrChannelNotFound, channelName)
-	}
-	return ch, nil
 }
 
 func (api *HTTPAPI) renderError(w http.ResponseWriter, r *http.Request, err error, httpStatusCode int) {

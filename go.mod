@@ -7,6 +7,7 @@ require (
 	github.com/go-chi/httplog v0.2.0
 	github.com/go-chi/render v1.0.1
 	github.com/go-resty/resty/v2 v2.6.0
+	github.com/jarcoal/httpmock v1.0.8
 	github.com/mitchellh/mapstructure v1.4.2
 	github.com/rotisserie/eris v0.5.1
 	github.com/rs/zerolog v1.25.0

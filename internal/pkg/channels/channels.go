@@ -2,6 +2,7 @@ package channels
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 
 	"github.com/rotisserie/eris"
@@ -18,6 +19,11 @@ type MessageChannelInterface interface {
 	Name() string
 	MessageContainer() interface{}
 	Enqueue(interface{}) error
+	Provider() interface {
+		HTTPClient() *http.Client
+	}
+	Stop() error
+	Start() error
 }
 
 var _channelsTypes = map[string]func(chanURL *url.URL, logger *zerolog.Logger) (MessageChannelInterface, error){}
