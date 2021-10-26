@@ -69,9 +69,10 @@ func main() {
 		logger.Fatal().Err(err)
 	}
 
-	logger.Info().Msg("Start http server")
+	hostAndPort := fmt.Sprintf("%s:%s", host, port)
+	logger.Info().Msgf("Start http server on %s", hostAndPort)
 	err = http.ListenAndServe(
-		fmt.Sprintf("%s:%s", host, port),
+		hostAndPort,
 		api,
 	)
 	if err != nil {
