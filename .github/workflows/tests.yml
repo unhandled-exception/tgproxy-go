@@ -38,7 +38,7 @@ jobs:
       - name: Build tgp
         run: go build -v ./cmd/tgp
       - name: Run tests
-        run: go test ./... -v -cover -race -coverpkg=./...
+        run: go test ./... -v -cover -coverpkg=./...
 
   # https://github.com/golangci/golangci-lint-action
   golangci:

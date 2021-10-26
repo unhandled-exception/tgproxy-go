@@ -22,7 +22,7 @@ tgp telegram://bot:tok1@123/chat_1 telegram://bot:tok1@123/chat_2?timeout=3
 API:
 Get ping-status — GET http://localhost:5000/ping
 Get channels list — GET http://localhost:5000/
-Send messge POST http://localhost:5000/chat_1 (text="Message", parse_mode ...)
+Send messge POST http://localhost:5000/chat_1 json_body("text":"Message", "parse_mode": ...)
 Get channel statistics GET http://localhost:5000/chat_1
 
 Run program:
@@ -64,13 +64,18 @@ func main() {
 
 	logger.Info().Msg(fmt.Sprint(messageChannels))
 
+	api := httpapi.NewHTTPAPI(messageChannels, &logger)
+	if err := api.StartAllChannels(); err != nil {
+		logger.Fatal().Err(err)
+	}
+
 	logger.Info().Msg("Start http server")
 	err = http.ListenAndServe(
 		fmt.Sprintf("%s:%s", host, port),
-		httpapi.NewHTTPAPI(messageChannels, &logger),
+		api,
 	)
 	if err != nil {
-		logger.Panic().Err(err)
+		logger.Fatal().Err(err)
 	}
 }
 
