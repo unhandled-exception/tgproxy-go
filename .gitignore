@@ -1,6 +1,7 @@
 .vscode/**
 .envrc
 bin/**
+.idea/**
 
 # Binaries for programs and plugins
 *.exe
