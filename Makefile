@@ -8,11 +8,11 @@ build:
 
 .PHONY: test
 test:
-	@go test ./... -cover -coverpkg=./...
+	@go test -cover -coverpkg=./... ./... -shuffle on
 
 .PHONY: test/cover
 test/cover:
-	@go test -v -coverpkg=./... -coverprofile=coverage.out ./...
+	@go test -v -coverpkg=./... -coverprofile=coverage.out ./... -shuffle on
 	@go tool cover -func=coverage.out
 	@go tool cover -html=coverage.out -o coverage.html
 

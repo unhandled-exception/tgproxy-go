@@ -203,7 +203,7 @@ type telegramChat struct {
 func NewTelegramChat(apiURL string, botToken string, chatID string, opts map[string]string, logger *zerolog.Logger) (*telegramChat, error) {
 	timeout := httpTimeout
 	if val, ok := opts["timeout"]; ok {
-		timeoutOpt, err := strconv.ParseInt(val, 10, 32)
+		timeoutOpt, err := strconv.ParseInt(val, 10, 32) //nolint:gomnd
 		if err != nil {
 			return nil, err
 		}

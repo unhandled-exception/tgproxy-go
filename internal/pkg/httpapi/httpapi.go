@@ -17,6 +17,8 @@ import (
 
 var ErrChannelNotFound = eris.New("Channel not found")
 
+const httpAPIRequestTimeout = 5 * time.Second
+
 type HTTPAPI struct {
 	router      *chi.Mux
 	logger      *zerolog.Logger
@@ -39,7 +41,7 @@ func NewHTTPAPI(messagesChannels []channels.MessageChannelInterface, logger *zer
 
 	router.Use(httplog.RequestLogger(*logger))
 	router.Use(middleware.Recoverer)
-	router.Use(middleware.Timeout(5 * time.Second))
+	router.Use(middleware.Timeout(httpAPIRequestTimeout))
 	router.Use(middleware.StripSlashes)
 
 	router.Get("/ping", api.onPing)
