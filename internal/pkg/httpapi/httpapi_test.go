@@ -189,6 +189,7 @@ func (ts *httpapiTestSuite) TestChannelIsFull() {
 
 	err := ts.sut.StopChannel("main")
 	ts.Require().NoError(err)
+	time.Sleep(100 * time.Millisecond)
 
 	ch, err := ts.sut.GetChannel("main")
 	ts.Require().NoError(err)
@@ -214,7 +215,4 @@ func (ts *httpapiTestSuite) TestChannelIsFull() {
 		}`,
 		body,
 	)
-
-	time.Sleep(100 * time.Millisecond)
-	ts.Equal(0, httpmock.GetTotalCallCount())
 }
