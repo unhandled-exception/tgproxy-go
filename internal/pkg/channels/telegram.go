@@ -45,10 +45,10 @@ var ErrTelegramInvalidTimeout = eris.New("Invalid telegram timeout")
 
 type TelegramMessage struct {
 	Text                  string  `json:"text" mapstructure:"text"`
-	ParseMode             *string `json:"parse_mode,omitempty" mapstructure:"parse_mode,omitempty"`
-	DisableWebPagePreview int     `json:"disable_web_page_preview" mapstructure:"disable_web_page_preview"`
-	DisableNotifications  int     `json:"disable_notifications" mapstructure:"disable_notifications"`
-	ReplyToMessageID      *int    `json:"reply_to_message_id,omitempty" mapstructure:"reply_to_message_id,omitempty"`
+	ParseMode             *string `json:"parseMode,omitempty" mapstructure:"parse_mode,omitempty"`
+	DisableWebPagePreview int     `json:"disableWebPagePreview" mapstructure:"disable_web_page_preview"`
+	DisableNotifications  int     `json:"disableNotifications" mapstructure:"disable_notifications"`
+	ReplyToMessageID      *int    `json:"replyToMessageId,omitempty" mapstructure:"reply_to_message_id,omitempty"`
 }
 
 func (m *TelegramMessage) String() string {
@@ -203,7 +203,7 @@ type telegramChat struct {
 func NewTelegramChat(apiURL string, botToken string, chatID string, opts map[string]string, logger *zerolog.Logger) (*telegramChat, error) {
 	timeout := httpTimeout
 	if val, ok := opts["timeout"]; ok {
-		timeoutOpt, err := strconv.ParseInt(val, 10, 32) //nolint:gomnd
+		timeoutOpt, err := strconv.ParseInt(val, 10, 32) //nolint:mnd
 		if err != nil {
 			return nil, err
 		}
@@ -211,7 +211,7 @@ func NewTelegramChat(apiURL string, botToken string, chatID string, opts map[str
 	}
 
 	httpClient := resty.New().
-		SetHostURL(
+		SetBaseURL(
 			fmt.Sprintf("%s/bot%s", apiURL, botToken),
 		).
 		SetTimeout(timeout).

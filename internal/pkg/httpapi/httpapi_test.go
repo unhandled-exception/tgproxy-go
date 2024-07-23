@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -42,7 +41,7 @@ func TestHttpAPI(t *testing.T) {
 }
 
 func (ts *httpapiTestSuite) SetupTest() {
-	logger := zerolog.New(ioutil.Discard)
+	logger := zerolog.New(io.Discard)
 	// logger := zerolog.New(zerolog.NewConsoleWriter())
 
 	chs, err := channels.BuildChannelsFromURLS(_testChannels, &logger)
@@ -56,7 +55,6 @@ func (ts *httpapiTestSuite) SetupTest() {
 
 	ts.sut = httpapi.NewHTTPAPI(chs, &logger)
 	err = ts.sut.StartAllChannels()
-
 	if err != nil {
 		ts.FailNow("Failed to init test app: %e", err)
 	}
@@ -119,7 +117,7 @@ type mockedRequest struct {
 }
 
 func newMockedRequest(req *http.Request) (*mockedRequest, error) {
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		return nil, err
 	}
