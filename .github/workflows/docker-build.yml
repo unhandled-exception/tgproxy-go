@@ -30,6 +30,7 @@ jobs:
       - name: Ping container
         run: |
           sleep 5
+          docker container ls
           curl -v "http://localhost:8888/ping"
       - name: Stop container
         if: ${{ true }}

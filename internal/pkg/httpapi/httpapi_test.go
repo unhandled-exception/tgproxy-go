@@ -28,7 +28,7 @@ var (
 	_testTelegamAPISendMessageMethod = "https://api.telegram.org/botbot:token/sendMessage"
 	_testAPIURL                      = "http://api"
 	_testContentTypeHeader           = "Content-Type"
-	_testApplicationJSONCT           = "application/json; charset=utf-8"
+	_testApplicationJSONCT           = "application/json"
 )
 
 type httpapiTestSuite struct {
