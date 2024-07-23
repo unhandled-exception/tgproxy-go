@@ -5,7 +5,7 @@ FROM golang:1.17-alpine
 WORKDIR /app
 COPY . /app
 
-RUN go mod download && go build -v -o ./bin/ ./cmd/tgp
+RUN go build -v -o ./bin/ ./cmd/tgp
 
 EXPOSE 8080
 

@@ -3,55 +3,39 @@ linters:
   # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
   disable-all: true
   enable:
+    - bidichk
     - bodyclose
-    - deadcode
-    - depguard
+    - containedctx
+    - contextcheck
+    - decorder
     - dogsled
-    - dupl
-    - errcheck
+    - errname
+    - errorlint
     - exhaustive
-    # - gochecknoinits
+    - exportloopref
+    - forcetypeassert
     - goconst
-    - gocritic
-    - gocyclo
-    - gofmt
-    - goimports
-    - gomnd
+    - gofumpt
+    - mnd
     - goprintffuncname
     - gosec
-    - gosimple
-    - govet
-    - ineffassign
-    - lll
-    - misspell
+    # - ireturn
+    - makezero
     - nakedret
-    - noctx
-    - nolintlint
+    - nestif
+    - nilerr
+    - nilnil
+    # - nlreturn
+    - predeclared
     - rowserrcheck
+    - sqlclosecheck
     - staticcheck
-    - structcheck
-    - stylecheck
-    - typecheck
+    - tagliatelle
+    - tenv
+    - testpackage
     - unconvert
-    - unparam
-    - unused
-    - varcheck
-    - whitespace
-  # don't enable:
-  # - scopelint
-  # - funlen
-  # - asciicheck
-  # - gochecknoglobals
-  # - gocognit
-  # - godot
-  # - godox
-  # - goerr113
-  # - maligned
-  # - nestif
-  # - prealloc
-  # - testpackage
-  # - wsl
-
+    - wastedassign
+    
 linters-settings:
   lll:
     # max line length, lines longer will be reported. Default is 120.

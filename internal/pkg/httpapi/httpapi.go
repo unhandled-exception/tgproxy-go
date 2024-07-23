@@ -79,7 +79,7 @@ func (api *HTTPAPI) StopChannel(name string) error {
 	}
 
 	if err := ch.Stop(); err != nil {
-		return nil
+		return err
 	}
 	return nil
 }

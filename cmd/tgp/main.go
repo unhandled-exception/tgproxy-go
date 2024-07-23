@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/unhandled-exception/tgproxy-go/internal/pkg/channels"
 	"github.com/unhandled-exception/tgproxy-go/internal/pkg/httpapi"
@@ -34,7 +35,10 @@ channels_urls — List of channels uri. Formatting: telegram://bot:token@chat_id
 Optional arguments:
 `
 
-const InvalidArgumentExitCode = 2
+const (
+	InvalidArgumentExitCode  = 2
+	serverReadHeadersTimeout = 10 * time.Millisecond
+)
 
 func main() {
 	var host string
@@ -71,10 +75,14 @@ func main() {
 
 	hostAndPort := fmt.Sprintf("%s:%s", host, port)
 	logger.Info().Msgf("Start http server on %s", hostAndPort)
-	err = http.ListenAndServe(
-		hostAndPort,
-		api,
-	)
+
+	server := &http.Server{
+		Addr:              hostAndPort,
+		Handler:           api,
+		ReadHeaderTimeout: serverReadHeadersTimeout,
+	}
+
+	err = server.ListenAndServe()
 	if err != nil {
 		logger.Fatal().Err(err)
 	}
