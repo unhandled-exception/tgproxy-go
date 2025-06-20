@@ -3,7 +3,7 @@ module github.com/unhandled-exception/tgproxy-go
 go 1.22
 
 require (
-	github.com/go-chi/chi/v5 v5.1.0
+	github.com/go-chi/chi/v5 v5.2.2
 	github.com/go-chi/httplog v0.3.2
 	github.com/go-chi/render v1.0.3
 	github.com/go-resty/resty/v2 v2.13.1
