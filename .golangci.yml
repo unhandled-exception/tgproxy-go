@@ -1,7 +1,6 @@
+version: "2"
 linters:
-  # please, do not use `enable-all`: it's deprecated and will be removed soon.
-  # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
-  disable-all: true
+  default: none
   enable:
     - bidichk
     - bodyclose
@@ -12,34 +11,45 @@ linters:
     - errname
     - errorlint
     - exhaustive
-    - exportloopref
     - forcetypeassert
     - goconst
-    - gofumpt
-    - mnd
     - goprintffuncname
     - gosec
-    # - ireturn
     - makezero
+    - mnd
     - nakedret
     - nestif
     - nilerr
     - nilnil
-    # - nlreturn
     - predeclared
     - rowserrcheck
     - sqlclosecheck
     - staticcheck
     - tagliatelle
-    - tenv
     - testpackage
     - unconvert
     - wastedassign
-    
-linters-settings:
-  lll:
-    # max line length, lines longer will be reported. Default is 120.
-    # '\t' is counted as 1 character by default, and can be changed with the tab-width option
-    line-length: 180
-    # tab width in spaces. Default to 1.
-    tab-width: 1
+  settings:
+    lll:
+      line-length: 180
+      tab-width: 1
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofumpt
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
